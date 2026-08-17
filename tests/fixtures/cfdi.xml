@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:Comprobante xmlns:x="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Fecha="2024-01-15T10:30:00" Sello="SECRETO" NoCertificado="00001000000500000000" Certificado="CERT" SubTotal="100.00" Moneda="MXN" Total="116.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="64000">
+  <x:Emisor Rfc="AAA010101AAA" Nombre="COMERCIALIZADORA ORIGINAL SA DE CV" RegimenFiscal="601"/>
+  <x:Receptor Rfc="BBB010101BBB" Nombre="CLIENTE ORIGINAL SA DE CV" DomicilioFiscalReceptor="64000" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <x:Conceptos><x:Concepto ClaveProdServ="01010101" Cantidad="1.00" ClaveUnidad="H87" Descripcion="SERVICIO GENERICO" ValorUnitario="100.00" Importe="100.00" ObjetoImp="02"/></x:Conceptos>
+  <x:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="123E4567-E89B-12D3-A456-426614174000" SelloCFD="CFD" SelloSAT="SAT" NoCertificadoSAT="CERTSAT"/></x:Complemento>
+</x:Comprobante>
