@@ -19,9 +19,29 @@ conserva estructura económica y bloquea resultados con PII original residual co
 
 ## Instalación y ejecución
 
+### macOS
+
+Consulte la [guía paso a paso para macOS](docs/macos.md). En resumen, desde Terminal:
+
+```bash
+cd /ruta/al/anonimizador---CFDI
+python3 --version                     # debe ser Python 3.11 o posterior
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+cfdi-sanitizer-gui
+```
+
+Para volver a abrirla después, entre nuevamente al directorio, ejecute
+`source .venv/bin/activate` y después `cfdi-sanitizer-gui`. La misma guía explica cómo usar la CLI
+y cómo crear una aplicación `.app` autocontenida para un equipo que no tenga Python instalado.
+
+### Linux y desarrollo
+
 ```bash
 python -m venv .venv
-. .venv/bin/activate                 # Windows: .venv\Scripts\activate
+. .venv/bin/activate
 pip install -e '.[dev]'
 cfdi-sanitizer inspect factura.xml
 cfdi-sanitizer sanitize ./input --output ./dataset --mode identity --seed 'secreto-largo'
@@ -30,6 +50,8 @@ cfdi-sanitizer verify ./dataset
 cfdi-sanitizer-gui
 pytest
 ```
+
+En Windows, la activación equivalente es `.venv\Scripts\activate`.
 
 La GUI permite elegir archivo, salida, analizar categorías sin mostrar valores y sanitizar. El
 modo `identity` conserva dinero. En `synthetic`, V1 aplica la política conservadora
@@ -56,8 +78,8 @@ residual → escritura atómica`. Consulte [`docs/architecture.md`](docs/archite
 ruff check .
 mypy src
 pytest
-pyinstaller --windowed --name CFDI-Dataset-Sanitizer src/cfdi_sanitizer/ui.py
-pyinstaller --name cfdi-sanitizer src/cfdi_sanitizer/cli.py
+pyinstaller --windowed --name CFDI-Dataset-Sanitizer --paths src packaging/gui_launcher.py
+pyinstaller --name cfdi-sanitizer --paths src packaging/cli_launcher.py
 ```
 
 PyInstaller genera binarios autocontenidos por plataforma; cada artefacto debe compilarse y
