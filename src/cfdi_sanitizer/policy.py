@@ -13,3 +13,13 @@ POLICY = {
 }
 SENSITIVE_HINTS = tuple(POLICY)
 
+FINANCIAL_DOCUMENT_POLICY = {
+    "organization_name": "pseudonymize:name", "rfc": "pseudonymize:rfc",
+    "client_number": "pseudonymize:identifier", "bank_account": "pseudonymize:account",
+    "clabe": "pseudonymize:clabe", "counterparty": "pseudonymize:name",
+    "tracking_key": "pseudonymize:identifier", "reference": "pseudonymize:identifier",
+    "transaction_number": "pseudonymize:identifier", "account_code": "preserve",
+    "generic_account_name": "preserve", "bank_name": "preserve",
+    "amount": "preserve", "balance": "preserve", "currency": "preserve", "date": "policy",
+    "anonymize_financial_institutions": False,
+}

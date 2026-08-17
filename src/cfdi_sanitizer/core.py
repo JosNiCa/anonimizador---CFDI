@@ -46,6 +46,8 @@ class Sanitizer:
         if root.tag != f"{{{CFDI_NS}}}Comprobante" or root.attrib.get("Version") != "4.0":
             raise UnsupportedDocument("Se requiere CFDI 4.0")
         for element in root.iter():
+            if "Rfc" in element.attrib and "Nombre" in element.attrib:
+                self.context.link_entity(element.attrib["Nombre"], element.attrib["Rfc"])
             for key, value in list(element.attrib.items()):
                 element.attrib[key] = self._transform(key, value)
             if element.text and element.text.strip():
@@ -143,4 +145,3 @@ class Sanitizer:
         if leftovers: raise RuntimeError("RESIDUAL_PII")
 
     def _inc(self, category: str) -> None: self.counts[category] = self.counts.get(category, 0) + 1
-

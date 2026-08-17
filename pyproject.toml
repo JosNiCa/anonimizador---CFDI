@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cfdi-dataset-sanitizer"
-version = "1.0.0"
+version = "1.1.0"
 description = "Sanitizador local y determinista de CFDI 4.0"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["cryptography>=42"]
+dependencies = ["cryptography>=42", "pypdf>=5,<7", "reportlab>=4,<5"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10", "pyinstaller>=6"]
@@ -28,3 +28,6 @@ line-length = 100
 
 [tool.ruff.lint]
 ignore = ["E701", "E702"]
+
+[tool.mypy]
+ignore_missing_imports = true

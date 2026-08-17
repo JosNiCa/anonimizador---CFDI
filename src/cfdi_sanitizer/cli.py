@@ -7,10 +7,11 @@ from pathlib import Path
 
 from .batch import inspect, run, verify
 from .models import DatePolicy, Mode, Options
+from .financial.models import DocumentType
 
 
 def parser() -> argparse.ArgumentParser:
-    root = argparse.ArgumentParser(prog="cfdi-sanitizer", description="Sanitización local de CFDI")
+    root = argparse.ArgumentParser(prog="cfdi-sanitizer", description="Sanitización local de CFDI y documentos financieros")
     sub = root.add_subparsers(dest="command", required=True)
     sanitize = sub.add_parser("sanitize"); sanitize.add_argument("source", type=Path)
     sanitize.add_argument("--output", type=Path, required=True)
@@ -19,6 +20,7 @@ def parser() -> argparse.ArgumentParser:
     sanitize.add_argument("--project", help="Alias compatible; no se exporta")
     sanitize.add_argument("--dates", choices=("keep", "shift", "generalize"), default="keep")
     sanitize.add_argument("--dry-run", action="store_true")
+    sanitize.add_argument("--document-type", choices=("bank-statement", "trial-balance", "auxiliary-ledger"))
     check = sub.add_parser("verify"); check.add_argument("dataset", type=Path)
     scan = sub.add_parser("inspect"); scan.add_argument("document", type=Path)
     sub.add_parser("gui")
@@ -36,10 +38,17 @@ def main(argv: list[str] | None = None) -> int:
         mode = Mode.IDENTITY_ONLY if args.mode == "identity" else Mode.SYNTHETIC_REINFORCED
         dates = DatePolicy(args.dates.upper())
         seed = args.seed or secrets.token_urlsafe(32)
-        result = run(args.source, args.output, seed, Options(mode, dates), args.dry_run)
+        forced = _document_type(args.document_type)
+        result = run(args.source, args.output, seed, Options(mode, dates), args.dry_run, forced)
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0 if result.get("status", "PASS") != "FAIL" else 1
 
 
-if __name__ == "__main__": raise SystemExit(main())
+def _document_type(value: str | None) -> DocumentType | None:
+    if value is None: return None
+    return {"bank-statement": DocumentType.BANK_STATEMENT,
+            "trial-balance": DocumentType.TRIAL_BALANCE,
+            "auxiliary-ledger": DocumentType.AUXILIARY_LEDGER}[value]
 
+
+if __name__ == "__main__": raise SystemExit(main())

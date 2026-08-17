@@ -14,6 +14,7 @@ class DatasetContext:
         raw = seed.encode() if isinstance(seed, str) else seed
         self._seed = raw or os.urandom(32)
         self._mapping: dict[str, dict[str, str]] = {}
+        self._entity_links: dict[str, str] = {}
         self.originals: set[str] = set()
 
     def digest(self, category: str, value: str) -> bytes:
@@ -26,12 +27,21 @@ class DatasetContext:
             bucket[value] = factory(self.digest(category, value))
         return bucket[value]
 
+    def link_entity(self, name: str, rfc: str) -> str:
+        """Asocia aliases de una organización sin exponerlos fuera del proyecto."""
+        existing = self._entity_links.get(f"name:{name}") or self._entity_links.get(f"rfc:{rfc}")
+        entity_id = existing or "ORG-" + self.digest("entity", f"{name}\0{rfc}")[:8].hex().upper()
+        self._entity_links[f"name:{name}"] = entity_id
+        self._entity_links[f"rfc:{rfc}"] = entity_id
+        return entity_id
+
     def save_encrypted(self, path: Path, password: str) -> None:
         from cryptography.fernet import Fernet
 
         salt = os.urandom(16)
         key = _key(password, salt)
-        payload = json.dumps({"seed": base64.b64encode(self._seed).decode(), "map": self._mapping}).encode()
+        payload = json.dumps({"seed": base64.b64encode(self._seed).decode(), "map": self._mapping,
+                              "entityLinks": self._entity_links}).encode()
         path.write_bytes(b"CFDI1" + salt + Fernet(key).encrypt(payload))
 
     @classmethod
@@ -44,6 +54,7 @@ class DatasetContext:
         payload = json.loads(Fernet(_key(password, data[5:21])).decrypt(data[21:]))
         context = cls(base64.b64decode(payload["seed"]))
         context._mapping = payload["map"]
+        context._entity_links = payload.get("entityLinks", {})
         context.originals = {value for values in context._mapping.values() for value in values}
         return context
 

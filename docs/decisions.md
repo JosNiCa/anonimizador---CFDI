@@ -6,4 +6,5 @@
    puede demostrarse segura para todos los complementos. Privacidad de identidad sí se aplica.
 3. Campos desconocidos se preservan para no destruir valor; nombres sospechosos generan advertencia
    y patrones/originales conocidos se escanean antes de exportar.
-
+4. Para PDF se reconstruye un artefacto nuevo con ReportLab y se reextrae con pypdf. Esto sacrifica
+   fidelidad visual para impedir que streams, XMP, adjuntos o texto oculto originales sobrevivan.

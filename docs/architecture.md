@@ -10,3 +10,6 @@ El mapping efímero sólo reside en RAM. La persistencia opcional (`*.mapping.en
 tabla con Fernet, derivando clave mediante PBKDF2; sólo ese archivo puede contener valores reales.
 Nunca se copia al directorio de salida ni aparece en manifest o logs.
 
+La rama `financial` añade modelo intermedio, detector, parsers independientes, detección híbrida,
+reconstrucción PDF y validación de preservación, reutilizando el mismo `DatasetContext` usado por
+CFDI. Consulte [financial-documents.md](financial-documents.md).

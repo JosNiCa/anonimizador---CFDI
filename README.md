@@ -1,8 +1,9 @@
 # CFDI Dataset Sanitizer
 
-Aplicación local, auditable y determinista para pseudonimizar CFDI 4.0 XML y el contrato JSON
-canónico del proyecto. Produce XML/JSON correlacionados, neutraliza material criptográfico,
-conserva estructura económica y bloquea resultados con PII original residual conocida.
+Aplicación local, auditable y determinista para pseudonimizar CFDI 4.0 XML/JSON y documentos
+financieros PDF: estados de cuenta, balanzas de comprobación y auxiliares contables. Produce
+artefactos reconstruidos, conserva estructura económica y bloquea resultados con PII original
+residual conocida.
 
 > **Los documentos generados por esta herramienta han sido modificados deliberadamente y no
 > deben utilizarse como comprobantes fiscales ni como sustitutos del CFDI original.**
@@ -43,7 +44,7 @@ y cómo crear una aplicación `.app` autocontenida para un equipo que no tenga P
 python -m venv .venv
 . .venv/bin/activate
 pip install -e '.[dev]'
-cfdi-sanitizer inspect factura.xml
+cfdi-sanitizer inspect estado-de-cuenta.pdf
 cfdi-sanitizer sanitize ./input --output ./dataset --mode identity --seed 'secreto-largo'
 cfdi-sanitizer sanitize ./input --output ./dataset --dry-run
 cfdi-sanitizer verify ./dataset
@@ -53,7 +54,8 @@ pytest
 
 En Windows, la activación equivalente es `.venv\Scripts\activate`.
 
-La GUI permite elegir archivo, salida, analizar categorías sin mostrar valores y sanitizar. El
+La GUI permite elegir XML, JSON o PDF, muestra el tipo financiero detectado, analiza categorías sin
+mostrar valores y sanitiza. El
 modo `identity` conserva dinero. En `synthetic`, V1 aplica la política conservadora
 `SKIPPED_UNSAFE_TRANSFORMATION` y mantiene importes si no demuestra coherencia completa.
 
@@ -64,6 +66,12 @@ XML y JSON canónico (`metadata`, `cfdi`); JSON de entrada conserva objetos, arr
 ausencias y extras. Se añade `datasetSanitization`, comentario XML y manifest no sensible. Los
 nombres de salida son `DOC-000001`, evitando filtrar nombres privados. La escritura es atómica y
 se rechaza usar la ubicación original como salida.
+
+Los PDF digitales nunca se cubren con rectángulos: se extrae su texto y se construye un PDF nuevo
+sin streams, metadata, formularios, anotaciones o adjuntos originales. Después se vuelve a extraer
+el texto, se ejecuta el scan residual y se comparan importes, jerarquía y cantidad de movimientos.
+Cada PDF aprobado incluye una marca visible y un sidecar `.sanitization.json` no sensible. Los PDF
+escaneados se bloquean con `OCR_REQUIRED`; V1 no incluye OCR ni servicios cloud.
 
 Material `Sello`, certificados y equivalentes se neutraliza; UUID/RFC/identidades se reemplazan
 mediante HMAC. DTD y declaraciones de entidades se rechazan antes del parseo para impedir XXE. No

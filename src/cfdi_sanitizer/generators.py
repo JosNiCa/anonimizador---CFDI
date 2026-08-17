@@ -28,6 +28,13 @@ def account(d: bytes, length: int = 18) -> str:
     return "0" + "".join(str(x % 10) for x in d[: length - 1])
 
 
+def clabe(d: bytes) -> str:
+    digits = [d[index % len(d)] % 10 for index in range(17)]
+    weights = (3, 7, 1)
+    check = (10 - sum((digit * weights[index % 3]) % 10 for index, digit in enumerate(digits)) % 10) % 10
+    return "".join(map(str, digits + [check]))
+
+
 def synthetic_uuid(d: bytes) -> str:
     raw = bytearray(d[:16]); raw[6] = (raw[6] & 15) | 64; raw[8] = (raw[8] & 63) | 128
     return str(uuid.UUID(bytes=bytes(raw))).upper()
@@ -35,4 +42,3 @@ def synthetic_uuid(d: bytes) -> str:
 
 def identifier(d: bytes) -> str:
     return "SYN-" + d[:8].hex().upper()
-
