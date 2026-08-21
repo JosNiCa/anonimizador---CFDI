@@ -5,6 +5,7 @@ import os
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Iterable
 
 from . import POLICY_VERSION, __version__
 from .core import Sanitizer
@@ -30,9 +31,23 @@ def inspect(path: Path, forced_type: DocumentType | None = None) -> dict[str, ob
 
 def run(source: Path, output: Path, seed: str, options: Options, dry_run: bool = False,
         forced_type: DocumentType | None = None) -> dict:
-    files = inputs(source)
-    if output.resolve() == source.resolve() or (source.is_file() and output.resolve() == source.parent.resolve()):
-        raise ValueError("La salida debe ser distinta de la ubicación original")
+    """Sanitize a file or all supported files below a directory."""
+    return run_batch([source], output, seed, options, dry_run, forced_type)
+
+
+def run_batch(sources: Iterable[Path], output: Path, seed: str, options: Options,
+              dry_run: bool = False,
+              forced_type: DocumentType | None = None) -> dict:
+    """Sanitize a batch of files/directories with one shared identity mapping.
+
+    Repeated files are processed only once.  A shared ``DatasetContext`` ensures
+    that the same identity receives the same pseudonym in every batch document.
+    """
+    source_paths = [Path(source) for source in sources]
+    if not source_paths:
+        raise ValueError("Debe seleccionar al menos un archivo o carpeta")
+    files = _batch_inputs(source_paths)
+    _validate_output(source_paths, output)
     context = DatasetContext(seed)
     totals: dict[str, int] = {}; exported = blocked = 0; errors: list[str] = []
     document_types = {kind.value: 0 for kind in DocumentType}
@@ -72,6 +87,30 @@ def run(source: Path, output: Path, seed: str, options: Options, dry_run: bool =
         "errors": errors, "riskNotice": "Puede persistir riesgo de reidentificación indirecta."}
     if not dry_run: _atomic(output / "sanitization_manifest.json", json.dumps(manifest, indent=2).encode())
     return manifest
+
+
+def _batch_inputs(sources: Iterable[Path]) -> list[Path]:
+    files: dict[Path, Path] = {}
+    for source in sources:
+        if not source.exists():
+            raise FileNotFoundError(f"No existe la entrada: {source}")
+        for path in inputs(source):
+            files.setdefault(path.resolve(), path)
+    if not files:
+        raise ValueError("El lote no contiene archivos XML, JSON o PDF")
+    return sorted(files.values(), key=lambda path: str(path.resolve()))
+
+
+def _validate_output(sources: Iterable[Path], output: Path) -> None:
+    resolved_output = output.resolve()
+    for source in sources:
+        resolved_source = source.resolve()
+        if resolved_output == resolved_source:
+            raise ValueError("La salida debe ser distinta de la ubicación original")
+        if source.is_file() and resolved_output == resolved_source.parent:
+            raise ValueError("La salida debe ser distinta de la ubicación original")
+        if source.is_dir() and resolved_output.is_relative_to(resolved_source):
+            raise ValueError("La salida no puede estar dentro de una carpeta de entrada")
 
 
 def verify(path: Path) -> dict:

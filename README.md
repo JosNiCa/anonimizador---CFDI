@@ -46,6 +46,7 @@ python -m venv .venv
 pip install -e '.[dev]'
 cfdi-sanitizer inspect estado-de-cuenta.pdf
 cfdi-sanitizer sanitize ./input --output ./dataset --mode identity --seed 'secreto-largo'
+cfdi-sanitizer sanitize factura-01.xml factura-02.xml estado.pdf --output ./dataset
 cfdi-sanitizer sanitize ./input --output ./dataset --dry-run
 cfdi-sanitizer verify ./dataset
 cfdi-sanitizer-gui
@@ -54,8 +55,9 @@ pytest
 
 En Windows, la activación equivalente es `.venv\Scripts\activate`.
 
-La GUI permite elegir XML, JSON o PDF, muestra el tipo financiero detectado, analiza categorías sin
-mostrar valores y sanitiza. El
+La GUI permite elegir un lote de archivos XML, JSON o PDF (o una carpeta completa), procesarlo con
+un mismo mapeo de identidades y devolver todos los resultados en la carpeta de salida. También
+muestra el tipo financiero detectado y analiza un documento a la vez sin revelar valores. El
 modo `identity` conserva dinero. En `synthetic`, V1 aplica la política conservadora
 `SKIPPED_UNSAFE_TRANSFORMATION` y mantiene importes si no demuestra coherencia completa.
 
