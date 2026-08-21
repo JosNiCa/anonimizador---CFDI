@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from cfdi_sanitizer.batch import run, verify
+from cfdi_sanitizer.batch import run, run_batch, verify
 from cfdi_sanitizer.core import Sanitizer
 from cfdi_sanitizer.mapping import DatasetContext
 from cfdi_sanitizer.models import DatePolicy, MalformedDocument, Options
@@ -66,3 +66,32 @@ def test_batch_atomic_outputs_and_verify(tmp_path):
     report = run(FIXTURE, output, "seed", Options())
     assert report["documentsExported"] == 1 and report["documentsBlocked"] == 0
     assert verify(output)["status"] == "PASS"
+
+
+def test_batch_accepts_multiple_files_and_deduplicates(tmp_path):
+    first = tmp_path / "first.xml"
+    second = tmp_path / "second.xml"
+    first.write_bytes(FIXTURE.read_bytes())
+    second.write_bytes(FIXTURE.read_bytes().replace(b'Folio="123"', b'Folio="456"'))
+
+    output = tmp_path / "out"
+    report = run_batch([second, first, first], output, "seed", Options())
+
+    assert report["documentsProcessed"] == 2
+    assert report["documentsExported"] == 2
+    assert sorted(path.name for path in output.glob("*.sanitized.xml")) == [
+        "DOC-000001.sanitized.xml",
+        "DOC-000002.sanitized.xml",
+    ]
+    assert verify(output)["status"] == "PASS"
+
+
+def test_batch_rejects_empty_or_output_inside_input(tmp_path):
+    with pytest.raises(ValueError, match="al menos un archivo"):
+        run_batch([], tmp_path / "out", "seed", Options())
+
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "invoice.xml").write_bytes(FIXTURE.read_bytes())
+    with pytest.raises(ValueError, match="dentro de una carpeta"):
+        run_batch([source], source / "processed", "seed", Options())

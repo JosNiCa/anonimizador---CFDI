@@ -5,7 +5,7 @@ import json
 import secrets
 from pathlib import Path
 
-from .batch import inspect, run, verify
+from .batch import inspect, run_batch, verify
 from .models import DatePolicy, Mode, Options
 from .financial.models import DocumentType
 
@@ -13,7 +13,7 @@ from .financial.models import DocumentType
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(prog="cfdi-sanitizer", description="Sanitización local de CFDI y documentos financieros")
     sub = root.add_subparsers(dest="command", required=True)
-    sanitize = sub.add_parser("sanitize"); sanitize.add_argument("source", type=Path)
+    sanitize = sub.add_parser("sanitize"); sanitize.add_argument("source", type=Path, nargs="+")
     sanitize.add_argument("--output", type=Path, required=True)
     sanitize.add_argument("--mode", choices=("identity", "synthetic"), default="identity")
     sanitize.add_argument("--seed", help="Secreto del dataset; no se registra")
@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
         dates = DatePolicy(args.dates.upper())
         seed = args.seed or secrets.token_urlsafe(32)
         forced = _document_type(args.document_type)
-        result = run(args.source, args.output, seed, Options(mode, dates), args.dry_run, forced)
+        result = run_batch(args.source, args.output, seed, Options(mode, dates), args.dry_run, forced)
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0 if result.get("status", "PASS") != "FAIL" else 1
 
